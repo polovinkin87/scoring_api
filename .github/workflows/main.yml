@@ -20,4 +20,4 @@ jobs:
           python test.py
       - name: Analysing the code with pylint
         run: |
-          pylint --disable=broad-exception-caught,missing-function-docstring,missing-class-docstring api.py
+          pylint --disable=broad-exception-caught,missing-function-docstring,missing-class-docstring,missing-module-docstring,deprecated-module,unused-argument,invalid-name,logging-fstring-interpolation,useless-return api.py

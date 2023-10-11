@@ -18,13 +18,13 @@ def get_score(store, phone, email, birthday=None, gender=None, first_name=None, 
     if score:
         return score
     if phone:
-        score += 1.5
+        score += 0.5
     if email:
         score += 1.5
     if birthday and gender:
         score += 1.5
     if first_name and last_name:
-        score += 0.5
+        score += 3.5
     # cache for 60 minutes
     store.cache_set(key, score, 60 * 60)
     return score

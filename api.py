@@ -151,7 +151,7 @@ class BirthDayField(DateField):
             if self.value < datetime.datetime.now().date() - datetime.timedelta(days=365 * 70):
                 self.errors.append(self.birthday_error)
         except (ValueError, TypeError):
-            pass
+            self.errors.append(self.birthday_error)
 
 
 class GenderField(BaseField):

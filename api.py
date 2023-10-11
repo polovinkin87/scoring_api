@@ -11,6 +11,7 @@ from optparse import OptionParser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import re
 from scoring import get_score, get_interests
+from store import Store
 
 SALT = "Otus"
 ADMIN_LOGIN = "admin"
@@ -36,6 +37,8 @@ GENDERS = {
     MALE: "male",
     FEMALE: "female",
 }
+DEFAULT_CACHE_CLIENT = 'memcache'
+DEFAULT_CACHE_ADDRESS = '127.0.0.1'
 
 
 class BaseField:
@@ -367,60 +370,67 @@ def method_handler(request, ctx, store):
     return response, code
 
 
-class MainHTTPHandler(BaseHTTPRequestHandler):
-    router = {
-        "method": method_handler,
-    }
-    store = None
+def make_handler_class(opts):
+    class MainHTTPHandler(BaseHTTPRequestHandler):
+        router = {
+            "method": method_handler,
+        }
+        store = Store(opts.cache_type, opts.cache_address, opts.cache_port)
 
-    def get_request_id(self, headers):
-        return headers.get('HTTP_X_REQUEST_ID', uuid.uuid4().hex)
+        def get_request_id(self, headers):
+            return headers.get('HTTP_X_REQUEST_ID', uuid.uuid4().hex)
 
-    def do_POST(self):
-        response, code = {}, OK
-        context = {"request_id": self.get_request_id(self.headers)}
-        request = None
-        try:
-            data_string = (self.rfile.read(int(self.headers['Content-Length'])))
-            request = json.loads(data_string)
-        except Exception as err:
-            logging.exception(err)
-            code = BAD_REQUEST
+        def do_POST(self):
+            response, code = {}, OK
+            context = {"request_id": self.get_request_id(self.headers)}
+            request = None
+            try:
+                data_string = (self.rfile.read(int(self.headers['Content-Length'])))
+                request = json.loads(data_string)
+            except Exception as err:
+                logging.exception(err)
+                code = BAD_REQUEST
 
-        if request:
-            path = self.path.strip("/")
-            logging.info(f"{self.path}: {data_string} {context['request_id']}")
-            if path in self.router:
-                try:
-                    response, code = self.router[path](
-                        {"body": request, "headers": self.headers}, context, self.store)
-                except Exception as err:
-                    logging.exception(err)
-                    code = INTERNAL_ERROR
+            if request:
+                path = self.path.strip("/")
+                logging.info(f"{self.path}: {data_string} {context['request_id']}")
+                if path in self.router:
+                    try:
+                        response, code = self.router[path](
+                            {"body": request, "headers": self.headers}, context, self.store)
+                    except Exception as err:
+                        logging.exception(err)
+                        code = INTERNAL_ERROR
+                else:
+                    code = NOT_FOUND
+
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            if code not in ERRORS:
+                data = {"response": response, "code": code}
             else:
-                code = NOT_FOUND
+                data = {"error": response or ERRORS.get(code, "Unknown Error"), "code": code}
+            context.update(data)
+            logging.info(context)
+            self.wfile.write(json.dumps(data).encode('utf-8'))
+            return
 
-        self.send_response(code)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        if code not in ERRORS:
-            data = {"response": response, "code": code}
-        else:
-            data = {"error": response or ERRORS.get(code, "Unknown Error"), "code": code}
-        context.update(data)
-        logging.info(context)
-        self.wfile.write(json.dumps(data).encode('utf-8'))
-        return
+    return MainHTTPHandler
 
 
 if __name__ == "__main__":
     op = OptionParser()
     op.add_option("-p", "--port", action="store", type=int, default=8080)
     op.add_option("-l", "--log", action="store", default=None)
+    op.add_option("-c", "--cache_address", action="store", default=DEFAULT_CACHE_ADDRESS)
+    op.add_option("-k", "--cache_type", action="store", default=DEFAULT_CACHE_CLIENT)
+    op.add_option("--cache_port", action="store", default=11211)
     (opts, args) = op.parse_args()
     logging.basicConfig(filename=opts.log, level=logging.INFO,
                         format='[%(asctime)s] %(levelname).1s %(message)s',
                         datefmt='%Y.%m.%d %H:%M:%S')
+    MainHTTPHandler = make_handler_class(opts)
     server = HTTPServer(("localhost", opts.port), MainHTTPHandler)
     logging.info(f"Starting server at {opts.port}")
     try:

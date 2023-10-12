@@ -15,7 +15,9 @@ def cases(case_list):
                     print("Error in case: %s" % (case,))
                     raise
             return
+
         return wrapper
+
     return decorator
 
 
@@ -28,11 +30,12 @@ class BaseFieldTestCase(unittest.TestCase):
             def clean(self):
                 if self.is_error:
                     self.errors.append(self.child_error)
+
         self.field_class = ChildBaseField
 
     @cases([
-        (True, ['is require']),
         (False, []),
+        (True, ['is require']),
     ])
     def test_require(self, case):
         required, error = case
@@ -42,12 +45,10 @@ class BaseFieldTestCase(unittest.TestCase):
         self.assertEqual(field.errors, error)
 
     @cases([
-        (False, [], ['is not nullable']),
-        (False, False, ['is not nullable']),
-        (False, '', ['is not nullable']),
         (True, [], []),
-        (True, False, []),
         (True, '', []),
+        (False, [], ['is not nullable']),
+        (False, '', ['is not nullable']),
     ])
     def test_nullable(self, case):
         nullable, value, error = case
@@ -57,8 +58,8 @@ class BaseFieldTestCase(unittest.TestCase):
         self.assertEqual(field.errors, error)
 
     @cases([
-        (True, ['have error']),
         (False, []),
+        (True, ['have error']),
     ])
     def test_clean_method_error(self, case):
         status, error = case
@@ -110,8 +111,8 @@ class ArgumentsFieldTestCase(unittest.TestCase):
         self.assertFalse(field.errors)
 
     @cases([
-        ('string', 'Is not dict with arguments'),
         (100, 'Is not dict with arguments'),
+        ('string', 'Is not dict with arguments'),
         (('string',), 'Is not dict with arguments'),
         ([1, 2, 3], 'Is not dict with arguments'),
         ({}, 'is not nullable'),
@@ -128,8 +129,8 @@ class ArgumentsFieldTestCase(unittest.TestCase):
 class EmailFieldTestCase(unittest.TestCase):
 
     @cases([
-        'testmail@mail.ru',
-        'gmail@gmail.com',
+        'email@mail.ru',
+        '12345@mail.com',
     ])
     def test_valid_value(self, case):
         field = api.EmailField(required=True, nullable=False)
@@ -138,10 +139,10 @@ class EmailFieldTestCase(unittest.TestCase):
         self.assertFalse(field.errors)
 
     @cases([
-        ('string', 'Is not email'),
-        ('mail.ru', 'Is not email'),
+        ('test', 'Is not email'),
+        ('email_mail.ru', 'Is not email'),
         (100, 'Is not a string'),
-        (('string',), 'Is not a string'),
+        (('text',), 'Is not a string'),
         ([1, 2, 3], 'Is not a string'),
         ({}, 'is not nullable'),
         ((), 'is not nullable'),
@@ -156,8 +157,8 @@ class EmailFieldTestCase(unittest.TestCase):
 
 class PhoneFieldTestCase(unittest.TestCase):
     @cases([
-        '79634261358',
-        79634261358,
+        '79287654321',
+        79281234567,
     ])
     def test_valid_value(self, case):
         field = api.PhoneField(required=True, nullable=False)
@@ -166,9 +167,9 @@ class PhoneFieldTestCase(unittest.TestCase):
         self.assertFalse(field.errors)
 
     @cases([
-        ('8999934222224', 'Is not phone number'),
-        ('7963426135_', 'Is not phone number'),
-        (796342613.5, 'Is not phone number'),
+        ('866666666666666', 'Is not phone number'),
+        ('7928426_135', 'Is not phone number'),
+        (7928426135., 'Is not phone number'),
         ([1, 2, 3], 'Is not phone number'),
         ({}, 'is not nullable'),
         ((), 'is not nullable'),
@@ -184,8 +185,8 @@ class PhoneFieldTestCase(unittest.TestCase):
 class DateFieldTestCase(unittest.TestCase):
 
     @cases([
-        '30.01.2017',
-        '1.2.2017',
+        '13.02.2023',
+        '1.1.2000',
     ])
     def test_valid_value(self, case):
         field = api.DateField(required=True, nullable=False)
@@ -194,11 +195,11 @@ class DateFieldTestCase(unittest.TestCase):
         self.assertFalse(field.errors)
 
     @cases([
-        ('01.02.17', 'Is note date'),
-        ('1.2.17', 'Is note date'),
-        ('10.2017', 'Is note date'),
-        ('2017.2017.2017', 'Is note date'),
-        (10.2017, 'Is note date'),
+        ('13.02.23', 'Is note date'),
+        ('1.1.20', 'Is note date'),
+        ('10.2023', 'Is note date'),
+        ('2023.2010.2021', 'Is note date'),
+        (13.2023, 'Is note date'),
         ([1, 2, 3], 'Is note date'),
         ({}, 'is not nullable'),
         ((), 'is not nullable'),
@@ -214,8 +215,8 @@ class DateFieldTestCase(unittest.TestCase):
 class BirthDayFieldTestCase(unittest.TestCase):
 
     @cases([
-        '30.01.2017',
-        '30.12.1948',
+        '28.10.2014',
+        '30.11.1953',
     ])
     def test_valid_value(self, case):
         field = api.BirthDayField(required=True, nullable=False)
@@ -224,15 +225,10 @@ class BirthDayFieldTestCase(unittest.TestCase):
         self.assertFalse(field.errors)
 
     @cases([
-        ('01.02.1947', 'Not a birthday'),
-        ('01.02.1000', 'Not a birthday'),
-        ('1.2.17', 'Is note date'),
-        ('10.2017', 'Is note date'),
-        ('2017.2017.2017', 'Is note date'),
-        (10.2017, 'Is note date'),
-        ([1, 2, 3], 'Is note date'),
-        ({}, 'is not nullable'),
+        ('30.06.1941', 'Not a birthday'),
+        ('01.01.1000', 'Not a birthday'),
         ((), 'is not nullable'),
+        ({}, 'is not nullable'),
     ])
     def test_invalid_value_(self, case):
         value, error = case
@@ -245,9 +241,9 @@ class BirthDayFieldTestCase(unittest.TestCase):
 class GenderFieldTestCase(unittest.TestCase):
 
     @cases([
-        2,
-        1,
         0,
+        1,
+        2,
     ])
     def test_valid_value(self, case):
         field = api.GenderField(required=True, nullable=False)
@@ -258,12 +254,12 @@ class GenderFieldTestCase(unittest.TestCase):
     @cases([
         (3, 'is not a gender number'),
         ('3', 'is not a gender number'),
-        ('01.02.1947', 'is not a gender number'),
-        ('test text', 'is not a gender number'),
-        ('1.2.17', 'is not a gender number'),
+        ('30.06.1941', 'is not a gender number'),
+        ('test case', 'is not a gender number'),
+        ('1.1.23', 'is not a gender number'),
         ({'test_key': 'test_value'}, 'is not a gender number'),
         ([1], 'is not a gender number'),
-        (10.2017, 'is not a gender number'),
+        (13.2023, 'is not a gender number'),
         ([1, 2, 3], 'is not a gender number'),
         ({}, 'is not nullable'),
         ((), 'is not nullable'),
@@ -279,9 +275,9 @@ class GenderFieldTestCase(unittest.TestCase):
 class ClientIDsFieldTestCase(unittest.TestCase):
 
     @cases([
-        [2],
-        [1, 3, 5, 6],
         [0],
+        [1, 3, 5, 6],
+        [2],
     ])
     def test_valid_value(self, case):
         field = api.ClientIDsField(required=True, nullable=False)
@@ -290,17 +286,17 @@ class ClientIDsFieldTestCase(unittest.TestCase):
         self.assertFalse(field.errors)
 
     @cases([
-        ([1, [2, 3]], 'Is not list of client ids'),
+        ([1, (2, 3)], 'Is not list of client ids'),
         (3, 'Is not list of client ids'),
         ('3', 'Is not list of client ids'),
-        ('01.02.1947', 'Is not list of client ids'),
-        ('test text', 'Is not list of client ids'),
-        ('1.2.17', 'Is not list of client ids'),
+        ('30.06.1941', 'Is not list of client ids'),
+        ('test case', 'Is not list of client ids'),
+        ('1.1.23', 'Is not list of client ids'),
         ({'test_key': 'test_value'}, 'Is not list of client ids'),
-        (10.2017, 'Is not list of client ids'),
-        ({}, 'is not nullable'),
+        (13.2023, 'Is not list of client ids'),
         ((), 'is not nullable'),
         ([], 'is not nullable'),
+        ({}, 'is not nullable'),
     ])
     def test_invalid_value_(self, case):
         value, error = case
@@ -326,13 +322,13 @@ class TestSuite(unittest.TestCase):
     @cases([
         {"account": "horns&hoofs", "login": "h&f", "method": "online_score", "token": "", "arguments":
             {}},
-        {"account": "horns&hoofs", "login": "h&f", "method": "online_score", "token": "sdd",
+        {"account": "horns&hoofs", "login": "h&f", "method": "online_score", "token": "123",
          "arguments": {}},
         {"account": "horns&hoofs", "login": "admin", "method": "online_score", "token": "", "arguments":
             {}},
         {"account": "horns&hoofs", "login": "user", "method": "clients_interests",
-         "token": "b52c9f8e9c28b90e93edd9b2e60ad46f1ee7913d8dacbe6878271950660579955e9cc02e13f6a9a3c492ef006b0be9f7c9b7f0015c3110447ce2b0f918d9f0f8",
-         "arguments": {"client_ids": [1, 2, 3, 4], "date": "20.07.2017"}}
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
+         "arguments": {"client_ids": [1, 2, 3, 4], "date": "13.02.2023"}}
     ])
     def test_bad_auth(self, request):
         _, code = self.get_response(request)
@@ -340,7 +336,7 @@ class TestSuite(unittest.TestCase):
 
     @cases([
         {"account": "horns&hoofs", "login": "user", "method": "clients_interests",
-         "arguments": {"client_ids": [1, 2, 3, 4], "date": "20.07.2017"}},
+         "arguments": {"client_ids": [1, 2, 3, 4], "date": "13.02.2023"}},
         {"account": "horns&hoofs", "login": "admin", "method": "online_score",
          "arguments": {}},
     ])
@@ -349,11 +345,11 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(api.INVALID_REQUEST, code)
 
     @cases([
-        {"account": "horns&hoofs", "login": "h&f", "method": "online",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
+        {"account": "horns&hoofs", "login": "vasya", "method": "get",
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
          "arguments": {}},
-        {"account": "horns&hoofs", "login": "h&f", "method": "score",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
+        {"account": "horns&hoofs", "login": "vasya", "method": "post",
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
          "arguments": {}},
     ])
     def test_method_not_found(self, request):
@@ -371,46 +367,38 @@ class TestSuiteWithStore(unittest.TestCase):
         return api.method_handler({"body": request, "headers": self.headers}, self.context, self.store)
 
     @cases([
-        {"account": "horns&hoofs", "login": "h&f", "method": "online_score",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
-         "arguments": {"phone": 79175002040, "email": "test@otus.ru", "first_name": "TestName",
-                       "last_name": "TestSurname", "birthday": "01.01.1990", "gender": 1}},
-        {"account": "horns&hoofs", "login": "h&f", "method": "online_score",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
-         "arguments": {"phone": "79175002040", "email": "tester@otus.ru", "first_name": "TestName",
-                       "last_name": "TestSurname", "birthday": "01.01.1965", "gender": 1}},
-        {"account": "horns&hoofs", "login": "h&f", "method": "online_score",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
-         "arguments": {"phone": "79175002040", "email": "tester@otus.ru", }},
-        {"account": "horns&hoofs", "login": "h&f", "method": "online_score",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
-         "arguments": {"birthday": "01.01.1990", "gender": 1 }},
-        {"account": "horns&hoofs", "login": "h&f", "method": "online_score",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
-         "arguments": {"first_name": "TestName", "last_name": "TestSurname",}},
+        {"account": "horns&hoofs", "login": "vasya", "method": "online_score",
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
+         "arguments": {"phone": "79174002042", "email": "vasya@otus.ru", "first_name": "Вася",
+                       "last_name": "Щупкин", "birthday": "01.01.1990", "gender": 2}},
+        {"account": "horns&hoofs", "login": "vasya", "method": "online_score",
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
+         "arguments": {"phone": "79174002042", "email": "vasya@otus.ru", }},
+        {"account": "horns&hoofs", "login": "vasya", "method": "online_score",
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
+         "arguments": {"birthday": "01.01.1990", "gender": 2}},
+        {"account": "horns&hoofs", "login": "vasya", "method": "online_score",
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
+         "arguments": {"first_name": "Вася", "last_name": "Щупкин"}},
     ])
     def test_valid_request(self, request):
         _, code = self.get_response(request)
         self.assertEqual(api.OK, code)
 
     @cases([
-        {"account": "horns&hoofs", "login": "h&f", "method": "online_score",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
-         "arguments": {"phone": 79175002040, "email": "test@otus.ru", "first_name": "TestName",
-                       "last_name": 120, "birthday": "01.01.1990", "gender": 1}},
-        {"account": "horns&hoofs", "login": "h&f", "method": "online_score",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
-         "arguments": {"phone": "79175002040", "email": "tester@otus.ru", "first_name": "TestName",
-                       "last_name": "TestSurname", "birthday": "01.01.1965", "gender": 10}},
-        {"account": "horns&hoofs", "login": "h&f", "method": "online_score",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
-         "arguments": {"phone": "79175002040", "last_name": "TestSurname", "gender": 10}},
-        {"account": "horns&hoofs", "login": "h&f", "method": "online_score",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
-         "arguments": { }},
-        {"account": "horns&hoofs", "login": "h&f", "method": "clients_interests",
-         "token": "55cc9ce545bcd144300fe9efc28e65d415b923ebb6be1e19d2750a2c03e80dd209a27954dca045e5bb12418e7d89b6d718a9e35af34e14e1d5bcd5a08f21fc95",
-         "arguments": {"client_ids": 10, "date": "20.07.2017"}},
+        {"account": "horns&hoofs", "login": "vasya", "method": "online_score",
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
+         "arguments": {"phone": "79174002042", "email": "vasya@otus.ru", "first_name": "Вася",
+                       "last_name": "Щупкин", "birthday": "01.01.1990", "gender": 10}},
+        {"account": "horns&hoofs", "login": "vasya", "method": "online_score",
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
+         "arguments": {"phone": "79175002040", "last_name": "Щупкин", "gender": 10}},
+        {"account": "horns&hoofs", "login": "vasya", "method": "online_score",
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
+         "arguments": {}},
+        {"account": "horns&hoofs", "login": "vasya", "method": "clients_interests",
+         "token": "7b1a275ce1e204b0c0a43c23c4e437eb4c5e731948698ef8ff3d66b0952e2154d4ad3ffe02f914cf5b2cca2fe57a952b802a5d39e6b6da5e329f33f85d71fbcb",
+         "arguments": {"client_ids": 10, "date": "13.02.2023"}},
     ])
     def test_invalid_request(self, request):
         _, code = self.get_response(request)

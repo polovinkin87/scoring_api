@@ -42,7 +42,7 @@ class Store:
         return True
 
 
-class MemCacheClient(object):
+class MemCacheClient:
     def __init__(self, ip_address, port, timeout):
         self.port = port or MEMCACHE_PORT
         self.connection = self.get_connection(ip_address, timeout)
